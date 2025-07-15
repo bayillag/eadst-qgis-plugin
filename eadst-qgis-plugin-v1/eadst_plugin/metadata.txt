@@ -1,0 +1,8 @@
+[general]
+name=Ethiopian Animal Disease Surveillance Toolbox
+qgisMinimumVersion=3.16
+description=A holistic, integrated QGIS plugin for animal health professionals in Ethiopia.
+version=1.0.0
+author=Bayilla Geda (DVM)
+email=bayillag@gmail.com
+experimental=True
