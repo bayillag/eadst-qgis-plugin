@@ -22,7 +22,7 @@ echo "  -> Setting up .devcontainer for GitHub Codespaces..."
 mkdir -p .devcontainer
 cat > .devcontainer/devcontainer.json << 'EOL'
 {
-  "name": "EADST v2.0 QGIS Plugin Development",
+  "name": "EADST v1.0 QGIS Plugin Development",
   "build": { "dockerfile": "Dockerfile", "context": ".." },
   "customizations": {
     "vscode": {

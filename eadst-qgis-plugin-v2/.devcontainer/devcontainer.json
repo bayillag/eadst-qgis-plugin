@@ -1,0 +1,5 @@
+{
+  "name": "EADST v2.0 QGIS Plugin Development", "build": { "dockerfile": "Dockerfile", "context": ".." },
+  "customizations": { "vscode": { "settings": { "python.defaultInterpreterPath": "/usr/bin/python3" }, "extensions": [ "ms-python.python", "ms-toolsai.jupyter" ] } },
+  "postCreateCommand": "pip3 install --user --no-cache-dir pysal geopandas pandas openpyxl matplotlib pytest", "remoteUser": "vscode"
+}
