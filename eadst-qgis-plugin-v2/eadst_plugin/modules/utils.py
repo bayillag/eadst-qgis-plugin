@@ -68,3 +68,5 @@ def open_pdf(pdf_name):
             subprocess.call(('xdg-open', file_path))
     except Exception as e:
         show_message(Qgis.instance().iface(), f"Could not open document: {e}", level=Qgis.Critical)
+
+

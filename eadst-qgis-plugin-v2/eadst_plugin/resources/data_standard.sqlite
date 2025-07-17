@@ -1,0 +1,1161 @@
+-- This database is created based on the "Ethiopian Ministry of Agriculture National Livestock Data Standard (Version 01)" document.
+-- The data is extracted from the provided OCR of the document.
+
+-- Drop tables if they exist to start fresh
+DROP TABLE IF EXISTS acronyms;
+DROP TABLE IF EXISTS age_categories;
+DROP TABLE IF EXISTS animal_id_ranges;
+DROP TABLE IF EXISTS species;
+DROP TABLE IF EXISTS species_codes;
+DROP TABLE IF EXISTS breed_type_codes;
+DROP TABLE IF EXISTS breeds;
+DROP TABLE IF EXISTS crossbreeds;
+DROP TABLE IF EXISTS crossbreeding_filial_levels;
+DROP TABLE IF EXISTS production_purposes;
+DROP TABLE IF EXISTS reproduction_status_enum;
+DROP TABLE IF EXISTS lactation_status_enum;
+DROP TABLE IF EXISTS health_status_enum;
+DROP TABLE IF EXISTS arrival_reason_enum;
+DROP TABLE IF EXISTS registration_reason_enum;
+DROP TABLE IF EXISTS tag_type_enum;
+DROP TABLE IF EXISTS retagging_reason_enum;
+DROP TABLE IF EXISTS death_reason_enum;
+DROP TABLE IF EXISTS disposal_method_enum;
+DROP TABLE IF EXISTS departure_reason_enum;
+DROP TABLE IF EXISTS exit_reason_enum;
+DROP TABLE IF EXISTS test_day_code_enum;
+DROP TABLE IF EXISTS unit_code_enum;
+DROP TABLE IF EXISTS milk_characteristics;
+DROP TABLE IF EXISTS insemination_type_enum;
+DROP TABLE IF EXISTS abortion_reason_enum;
+DROP TABLE IF EXISTS birthing_ease_enum;
+DROP TABLE IF EXISTS progeny_status_enum;
+DROP TABLE IF EXISTS progeny_birth_size_enum;
+DROP TABLE IF EXISTS progeny_weight_method_enum;
+DROP TABLE IF EXISTS pregnancy_diagnosis_method_enum;
+DROP TABLE IF EXISTS pregnancy_diagnosis_result_enum;
+DROP TABLE IF EXISTS estrus_sync_method_enum;
+DROP TABLE IF EXISTS heat_detection_method_enum;
+DROP TABLE IF EXISTS heat_certainty_enum;
+DROP TABLE IF EXISTS heat_signs_enum;
+DROP TABLE IF EXISTS heat_intensity_enum;
+DROP TABLE IF EXISTS weight_method_enum;
+DROP TABLE IF EXISTS disease_stage_enum;
+DROP TABLE IF EXISTS disease_severity_enum;
+DROP TABLE IF EXISTS affected_system_enum;
+DROP TABLE IF EXISTS administration_route_enum;
+DROP TABLE IF EXISTS vaccination_purpose_enum;
+DROP TABLE IF EXISTS vaccination_type_enum;
+DROP TABLE IF EXISTS disease_categories;
+DROP TABLE IF EXISTS diseases;
+DROP TABLE IF EXISTS diagnostic_methods;
+DROP TABLE IF EXISTS treatments;
+DROP TABLE IF EXISTS husbandry_procedures;
+DROP TABLE IF EXISTS production_system_enum;
+DROP TABLE IF EXISTS investment_level_enum;
+DROP TABLE IF EXISTS farm_size_extensive;
+DROP TABLE IF EXISTS farm_size_intensive;
+DROP TABLE IF EXISTS farm_size_enum;
+DROP TABLE IF EXISTS cattle_age_dentition;
+DROP TABLE IF EXISTS camel_age_dentition;
+DROP TABLE IF EXISTS ruminant_age_dentition;
+DROP TABLE IF EXISTS cattle_bcs_feedlot;
+DROP TABLE IF EXISTS cattle_conformation_score_feedlot;
+DROP TABLE IF EXISTS cattle_grading_feedlot;
+DROP TABLE IF EXISTS cattle_bcs_dairy;
+DROP TABLE IF EXISTS cattle_bcs_dairy_targets;
+DROP TABLE IF EXISTS dairy_conformation_traits;
+DROP TABLE IF EXISTS camel_bcs;
+DROP TABLE IF EXISTS camel_conformation;
+DROP TABLE IF EXISTS camel_grading;
+DROP TABLE IF EXISTS ruminant_bcs;
+DROP TABLE IF EXISTS ruminant_conformation;
+DROP TABLE IF EXISTS ruminant_grading_male;
+
+-- #############################################
+-- SECTION: GENERAL INFORMATION & ENUMS
+-- #############################################
+
+-- Table from Acronyms section (Page vii-viii)
+CREATE TABLE acronyms (
+    acronym TEXT PRIMARY KEY,
+    full_name TEXT NOT NULL
+);
+
+-- Table from Age Categorization (Page xvi)
+CREATE TABLE age_categories (
+    species TEXT PRIMARY KEY,
+    immature_calf_years TEXT,
+    young_years TEXT,
+    adult_years TEXT,
+    old_years TEXT
+);
+
+-- Table from Table 1: Country Code and Range of Code Numbers by Species (Page 23)
+CREATE TABLE animal_id_ranges (
+    species TEXT PRIMARY KEY,
+    country_code TEXT,
+    start_range INTEGER,
+    end_range INTEGER,
+    total_tagged INTEGER,
+    display_format_start TEXT,
+    display_format_end TEXT
+);
+
+-- Table from Table 4: Scientific Names of Different Domestic Animal Species (Page 25)
+CREATE TABLE species (
+    id INTEGER PRIMARY KEY,
+    common_name TEXT UNIQUE NOT NULL,
+    scientific_name TEXT,
+    subfamily TEXT
+);
+
+-- Table from Table 9: Codes of Various Animal Species (Page 29)
+CREATE TABLE species_codes (
+    species_name TEXT PRIMARY KEY,
+    species_code INTEGER UNIQUE NOT NULL
+);
+
+-- Table from Table 9: Codes of Breed Types (Page 29)
+CREATE TABLE breed_type_codes (
+    breed_type TEXT PRIMARY KEY,
+    breed_type_code INTEGER UNIQUE NOT NULL
+);
+
+-- Table from Table 8: Possible Blood Level Percentage of Crosses Between Exotic and Indigenous Animals (Page 29)
+CREATE TABLE crossbreeding_filial_levels (
+    crossbreeding TEXT PRIMARY KEY,
+    filial TEXT,
+    exotic_blood_level_percent REAL,
+    exotic_blood_level_fraction TEXT
+);
+
+-- Table from Table 24: Production Purposes of Domestic Animals in Ethiopia (Page 37)
+CREATE TABLE production_purposes (
+    purpose TEXT PRIMARY KEY,
+    species_affected TEXT
+);
+
+-- Table from Table 26: Reproduction Status Categories (Page 37)
+CREATE TABLE reproduction_status_enum (
+    status TEXT PRIMARY KEY,
+    description TEXT
+);
+
+-- Table from Table 28, 29, 30: Lactation Status Categories (Page 38-39)
+CREATE TABLE lactation_status_enum (
+    species TEXT,
+    status TEXT,
+    description TEXT,
+    PRIMARY KEY (species, status)
+);
+
+-- Table from Table 34: Animal Health Status Categories (Page 41)
+CREATE TABLE health_status_enum (
+    status TEXT PRIMARY KEY,
+    description TEXT
+);
+
+-- #############################################
+-- SECTION: BREEDS (Cattle, Goats, Sheep, Camels, etc.)
+-- #############################################
+
+-- Master table for all breeds from pages 31-51 and Appendix 1 (Page 167)
+CREATE TABLE breeds (
+    breed_code TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    species_code INTEGER,
+    breed_type_code INTEGER,
+    abbreviation TEXT,
+    description TEXT,
+    synonym TEXT,
+    origin TEXT,
+    coat_color TEXT,
+    horns TEXT,
+    hump TEXT,
+    location TEXT,
+    tail TEXT,
+    pictorial_description_available INTEGER, -- Boolean (0 or 1)
+    FOREIGN KEY (species_code) REFERENCES species_codes(species_code),
+    FOREIGN KEY (breed_type_code) REFERENCES breed_type_codes(breed_type_code)
+);
+
+-- Table for crossbreeds from tables 13, 16, 19
+CREATE TABLE crossbreeds (
+    crossbreed_code TEXT PRIMARY KEY,
+    name TEXT,
+    abbreviation TEXT,
+    description TEXT,
+    species_code INTEGER,
+    FOREIGN KEY (species_code) REFERENCES species_codes(species_code)
+);
+
+
+-- #############################################
+-- SECTION: EVENT ENUMERATIONS
+-- #############################################
+
+-- Table from Arrival events data items (Page 46)
+CREATE TABLE arrival_reason_enum (
+    reason TEXT PRIMARY KEY
+);
+
+-- Table from Animal Birth data field (Page 48)
+CREATE TABLE registration_reason_enum (
+    reason TEXT PRIMARY KEY
+);
+CREATE TABLE tag_type_enum (
+    type TEXT PRIMARY KEY
+);
+
+-- Table from Animal Retagging/Replacement data field (Page 51)
+CREATE TABLE retagging_reason_enum (
+    reason TEXT PRIMARY KEY
+);
+
+-- Table from Death registration data field (Page 52)
+CREATE TABLE death_reason_enum (
+    reason TEXT PRIMARY KEY
+);
+CREATE TABLE disposal_method_enum (
+    method TEXT PRIMARY KEY
+);
+
+-- Table from Animal Departure data field (Page 53)
+CREATE TABLE departure_reason_enum (
+    reason TEXT PRIMARY KEY
+);
+
+-- Table from Exit/removal data field (Page 55)
+CREATE TABLE exit_reason_enum (
+    reason TEXT PRIMARY KEY
+);
+
+-- Table from Animal test day result data field (Page 56)
+CREATE TABLE test_day_code_enum (
+    code TEXT PRIMARY KEY
+);
+CREATE TABLE unit_code_enum (
+    code TEXT PRIMARY KEY,
+    description TEXT
+);
+CREATE TABLE milk_characteristics (
+    characteristic TEXT PRIMARY KEY,
+    unit_of_measurement TEXT
+);
+
+-- Table from Insemination data filed (Page 59)
+CREATE TABLE insemination_type_enum (
+    type TEXT PRIMARY KEY
+);
+
+-- Table from Abortion data field (Page 61)
+CREATE TABLE abortion_reason_enum (
+    reason TEXT PRIMARY KEY
+);
+
+-- Table from Parturition data filed (Page 62)
+CREATE TABLE birthing_ease_enum (
+    ease_level TEXT PRIMARY KEY,
+    example TEXT
+);
+
+-- Table from Progeny details data field (Page 63)
+CREATE TABLE progeny_status_enum (
+    status TEXT PRIMARY KEY
+);
+CREATE TABLE progeny_birth_size_enum (
+    size TEXT PRIMARY KEY
+);
+CREATE TABLE progeny_weight_method_enum (
+    method TEXT PRIMARY KEY
+);
+
+-- Table from Pregnancy Diagnosis data filed (Page 64)
+CREATE TABLE pregnancy_diagnosis_method_enum (
+    method TEXT PRIMARY KEY
+);
+CREATE TABLE pregnancy_diagnosis_result_enum (
+    result TEXT PRIMARY KEY
+);
+
+-- Table from Estrus Synchronization data field (Page 65)
+CREATE TABLE estrus_sync_method_enum (
+    method TEXT PRIMARY KEY,
+    description TEXT
+);
+
+-- Table from Heat/estrus data field (Page 66)
+CREATE TABLE heat_detection_method_enum (
+    method TEXT PRIMARY KEY
+);
+CREATE TABLE heat_certainty_enum (
+    certainty TEXT PRIMARY KEY
+);
+CREATE TABLE heat_signs_enum (
+    sign TEXT PRIMARY KEY
+);
+CREATE TABLE heat_intensity_enum (
+    intensity TEXT PRIMARY KEY
+);
+
+-- Table from Animal Weight data field (Page 68)
+CREATE TABLE weight_method_enum (
+    method TEXT PRIMARY KEY
+);
+
+-- Table from Single animal diagnosis data field (Page 70)
+CREATE TABLE disease_stage_enum (
+    stage TEXT PRIMARY KEY
+);
+CREATE TABLE disease_severity_enum (
+    severity TEXT PRIMARY KEY
+);
+CREATE TABLE affected_system_enum (
+    system TEXT PRIMARY KEY
+);
+
+-- Table from Animal treatment data field (Page 88)
+CREATE TABLE administration_route_enum (
+    route TEXT PRIMARY KEY
+);
+
+-- Table from Animal vaccination data filed (Page 90)
+CREATE TABLE vaccination_purpose_enum (
+    purpose TEXT PRIMARY KEY
+);
+CREATE TABLE vaccination_type_enum (
+    type TEXT PRIMARY KEY
+);
+
+-- #############################################
+-- SECTION: ANIMAL HEALTH, DISEASES, VACCINES
+-- #############################################
+
+-- Table from Tables 59, 60: Disease Categories (Page 102)
+CREATE TABLE disease_categories (
+    code TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    parent_code TEXT,
+    FOREIGN KEY(parent_code) REFERENCES disease_categories(code)
+);
+
+-- Table from Tables 61, 62, 63: Disease Lists (Pages 104-121)
+CREATE TABLE diseases (
+    code TEXT PRIMARY KEY,
+    name TEXT,
+    abbreviation TEXT,
+    category_code TEXT,
+    species_affected TEXT,
+    causative_agent TEXT,
+    other_names TEXT,
+    notes TEXT,
+    FOREIGN KEY(category_code) REFERENCES disease_categories(code)
+);
+
+-- Table from Table 64: Diagnostic Methods and Their Abbreviations (Page 126)
+CREATE TABLE diagnostic_methods (
+    code TEXT PRIMARY KEY,
+    method TEXT,
+    abbreviation TEXT
+);
+
+-- Table from Table 65: Possible Treatment and Their Abbreviations (Page 129)
+CREATE TABLE treatments (
+    code TEXT PRIMARY KEY,
+    treatment_name TEXT,
+    abbreviation TEXT
+);
+
+-- Table from Table 66: Husbandry Procedures and Their Abbreviations (Page 129)
+CREATE TABLE husbandry_procedures (
+    code TEXT PRIMARY KEY,
+    procedure_name TEXT,
+    abbreviation TEXT
+);
+
+-- Table from Table 67 & 68: Vaccines (Pages 132-135)
+CREATE TABLE vaccines (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    abbreviation TEXT,
+    code TEXT,
+    animal_species TEXT,
+    production_type TEXT -- Local or Imported
+);
+
+
+-- #############################################
+-- SECTION: ADDITIONAL ATTRIBUTES (FARMING, GRADING)
+-- #############################################
+
+-- Table from Urban, peri-urban or rural livestock production system field (Page 125)
+CREATE TABLE production_system_enum (
+    system TEXT PRIMARY KEY
+);
+
+-- Table from Intensive, Extensive, Semi-intensive livestock production system field (Page 126)
+CREATE TABLE investment_level_enum (
+    level TEXT PRIMARY KEY
+);
+
+-- Table from Table 71: Herd/Flock Size (Extensive System) (Page 126)
+CREATE TABLE farm_size_extensive (
+    species TEXT NOT NULL,
+    system_type TEXT NOT NULL, -- Pastoral, Agro-Pastoral, Mixed Farming
+    small_range TEXT,
+    medium_range TEXT,
+    large_range TEXT,
+    PRIMARY KEY (species, system_type)
+);
+
+-- Table from Table 72: Feedlot and Dairy Size Based (Intensive, Semi-Intensive) (Page 127)
+CREATE TABLE farm_size_intensive (
+    species TEXT NOT NULL,
+    system_subtype TEXT NOT NULL, -- e.g., 'Feedlot Semi-intensive'
+    small_range TEXT,
+    medium_range TEXT,
+    large_range TEXT,
+    PRIMARY KEY (species, system_subtype)
+);
+
+-- Table from Farm Size field (Page 127)
+CREATE TABLE farm_size_enum (
+    size TEXT PRIMARY KEY
+);
+
+-- Table from Table 74: Cattle Age Determination Based on Dentition (Page 128)
+CREATE TABLE cattle_age_dentition (
+    age_of_cattle TEXT PRIMARY KEY,
+    description_of_teeth TEXT
+);
+
+-- Table from Table 75: Camel Age Determination Based on Dentition (Page 129)
+CREATE TABLE camel_age_dentition (
+    age TEXT PRIMARY KEY,
+    features TEXT
+);
+
+-- Table from Table 76: Age Estimated for Sheep and Goats Based on Dentition (Page 130)
+CREATE TABLE ruminant_age_dentition (
+    no_of_permanent_incisors TEXT PRIMARY KEY,
+    goat_age_years TEXT,
+    sheep_age_years TEXT
+);
+
+-- Table from Table 77: Categories of Cattle BCS (1 to 5) (Page 131)
+CREATE TABLE cattle_bcs_feedlot (
+    score INTEGER PRIMARY KEY,
+    body_condition TEXT,
+    fatness TEXT,
+    description TEXT
+);
+
+-- Table from Table 78: Cattle Body Conformation Score (Page 132)
+CREATE TABLE cattle_conformation_score_feedlot (
+    score INTEGER PRIMARY KEY,
+    grading TEXT,
+    description TEXT
+);
+
+-- Table from Table 79: Cattle Grading Based on the Five Parameters (Page 133)
+CREATE TABLE cattle_grading_feedlot (
+    grade INTEGER,
+    sex TEXT,
+    weight_kg TEXT,
+    age_years TEXT,
+    bcs TEXT,
+    bcofs TEXT,
+    PRIMARY KEY (grade, sex, age_years)
+);
+
+-- Table from Table 80: Lactating Cattle BCS (Page 134)
+CREATE TABLE cattle_bcs_dairy (
+    score INTEGER PRIMARY KEY,
+    condition TEXT,
+    description TEXT
+);
+
+-- Table from Table 81: Recommended BCS for different lactation stages of dairy cattle (Page 135)
+CREATE TABLE cattle_bcs_dairy_targets (
+    lactation_stage TEXT PRIMARY KEY,
+    recommended_target_bcs TEXT
+);
+
+-- Table from Table 82: Percentage score of body conformation with description (Page 136)
+CREATE TABLE dairy_conformation_traits (
+    observed_structure TEXT PRIMARY KEY,
+    scored_value_percent INTEGER,
+    description TEXT
+);
+
+-- Table from Table 83: Camel body condition score (Page 138)
+CREATE TABLE camel_bcs (
+    score INTEGER PRIMARY KEY,
+    body_condition TEXT,
+    fatness TEXT,
+    description TEXT
+);
+
+-- Table from Table 84: Camel body conformation with its description (Page 139)
+CREATE TABLE camel_conformation (
+    score INTEGER PRIMARY KEY,
+    body_conformation TEXT,
+    description TEXT
+);
+
+-- Table from Table 85: Camel grading in relation to age, sex, BCS, and conformation (Page 140)
+CREATE TABLE camel_grading (
+    grade TEXT,
+    age_years TEXT,
+    sex TEXT,
+    body_condition TEXT,
+    body_conformation TEXT,
+    PRIMARY KEY (grade, age_years, sex)
+);
+
+-- Table from Table 86: Scales for BSC of Sheep and Goats (Page 141)
+CREATE TABLE ruminant_bcs (
+    score INTEGER PRIMARY KEY,
+    body_condition TEXT,
+    lumbar_region_desc TEXT,
+    rib_cage_desc TEXT,
+    sternum_desc TEXT
+);
+
+-- Table from Table 87: Sheep and Goat Grading Based on Body Conformation (Page 143)
+CREATE TABLE ruminant_conformation (
+    score INTEGER PRIMARY KEY,
+    conformation TEXT,
+    description TEXT
+);
+
+-- Table from Table 88: Grades and Grading Parameters for Male Sheep and Goats (Page 144)
+CREATE TABLE ruminant_grading_male (
+    grade INTEGER PRIMARY KEY,
+    age_months_sheep TEXT,
+    age_months_goat TEXT,
+    live_body_weight_kg_sheep TEXT,
+    live_body_weight_kg_goat TEXT,
+    body_condition_score TEXT,
+    body_conformation_score TEXT
+);
+
+-- #############################################
+-- ############# DATA INSERTION ################
+-- #############################################
+
+BEGIN TRANSACTION;
+
+-- Data for: acronyms
+INSERT INTO acronyms (acronym, full_name) VALUES
+('ADE', 'Animal Data Exchange'),
+('ADGG', 'African Dairy Genetic Gain'),
+('ADNIS', 'Animal Disease Notification and Investigation System'),
+('ADR', 'Animal Data Recording'),
+('AGID', 'Agar Gel Immunodiffusion'),
+('AIR', 'Animal Identification and Registration'),
+('BcofS', 'Body Conformation Score'),
+('BCS', 'Body Condition Score'),
+('BHB', 'Beta Hydroxybutyrate'),
+('BMGF', 'Bill and Melinda Gates Foundation'),
+('CBC', 'Complete Blood Count'),
+('CIAT', 'International Center for Tropical Agriculture'),
+('CRT', 'Capillary Refill Time'),
+('DEFRA', 'Department for Environment, Food, and Rural Affairs'),
+('DNA', 'Deoxynucleic Acid'),
+('DOVA', 'Disease Outbreak and Vaccination Report'),
+('ELISA-AG', 'Enzyme-Linked Immunosorbent Assay for Antigens'),
+('ELISA-AB', 'Enzyme-Linked Immunosorbent Assay for Antibodies'),
+('ELSAME', 'Ethiopian Livestock Sector Analysis, Management Entity'),
+('ESGPIP', 'Ethiopia Sheep and Goat Productivity Improvement Program'),
+('ET', 'Ethiopia'),
+('ET-LITS', 'Ethiopian Livestock Identification and Traceability System'),
+('FAO', 'Food and Agriculture Organization of the United Nations'),
+('IBC', 'Institute of Biodiversity Conservation'),
+('IFA', 'Indirect Fluorescent Antibody'),
+('GPS', 'Global Positioning System'),
+('GC', 'Gregorian Calendar'),
+('GDP', 'Gross Domestic Product'),
+('IGAD', 'Intergovernmental Authority for Development'),
+('ICPALD', 'IGAD Center for Pastoral Areas and Livestock Development'),
+('ICAR', 'International Committee for Animal Recording'),
+('ICT', 'Information and Communications Technology'),
+('ID', 'Identification number'),
+('ILRI', 'International Livestock Research Institute'),
+('IM', 'Intramuscular'),
+('IMMI', 'Intramammary Infusion'),
+('ISO', 'International Organization for Standardization'),
+('IU', 'International Unit'),
+('IVacc', 'Imported Vaccines'),
+('IV', 'Intravenous'),
+('KOH', 'Potassium Hydroxide'),
+('LDH', 'Lactate Dehydrogenase'),
+('LIC', 'Livestock Improvement Corporation'),
+('LIS', 'Livestock Information System'),
+('LITS', 'Livestock Identification and Traceability System'),
+('LMIS', 'Livestock Marketing Information System'),
+('LMP', 'Livestock Master Plan'),
+('LVacc', 'Locally Produced Livestock Vaccines'),
+('MoA', 'Ministry of Agriculture, Ethiopia'),
+('mRNA', 'Messenger RNA'),
+('PAG', 'Pregnancy Associated Glycoprotein'),
+('PO', 'Per os'),
+('PCR', 'Polymerase Chain Reaction'),
+('RNA', 'Ribonucleic Acid'),
+('SC', 'Subcutaneous'),
+('SCC', 'Somatic Cell Count'),
+('SGP', 'Sheep and Goat Production'),
+('SILAB', 'Sistema for Laboratoria (laboratory information management system)'),
+('TADs', 'Transboundary Animal Diseases'),
+('UID', 'Unique Identification'),
+('UTC', 'Universal Time Coordinated'),
+('VN/SN', 'Virus (Serum) Neutralization'),
+('UN/CEFACT', 'United Nations Centre for Trade Facilitation and Electronic Business'),
+('WHO', 'World Health Organization'),
+('WTO', 'World Trade Organization');
+
+-- Data for: age_categories
+INSERT INTO age_categories (species, immature_calf_years, young_years, adult_years, old_years) VALUES
+('Cattle', '[0, 1)', '[1, 3)', '[3, 10)', '> 10'),
+('Camel', '[0, 3)', '[3, 7)', '[7, 15)', '>15'),
+('Sheep', '-', '(0, 1)', '[1, 3]', '>3'),
+('Goats', '-', '(0, 1)', '[1-4]', '>4');
+
+-- Data for: animal_id_ranges
+INSERT INTO animal_id_ranges (species, country_code, start_range, end_range, total_tagged, display_format_start, display_format_end) VALUES
+('Cattle', 'ET', 1, 4999999999, 4999999999, 'ET 0000000001', 'ET 4999999999'),
+('Sheep', 'ET', 5000000000, 6499999999, 1500000000, 'ET 5000000000', 'ET 6499999999'),
+('Goats', 'ET', 6500000000, 8499999999, 2000000000, 'ET 6500000000', 'ET 8499999999'),
+('Camels', 'ET', 8500000000, 8599999999, 100000000, 'ET 8500000000', 'ET 8599999999'),
+('Chickens & others', 'ET', 8600000000, 9999999999, 1400000000, 'ET 8600000000', 'ET 9999999999');
+
+-- Data for: species
+INSERT INTO species (id, common_name, scientific_name, subfamily) VALUES
+(1, 'Cattle', 'Bos taurus & Bos indicus', 'Bovine'),
+(2, 'Camel', 'Camelus', 'Camelidae'),
+(3, 'Sheep', 'Ovis aries', 'Ovine'),
+(4, 'Goat', 'Capra hircus', 'Caprine'),
+(5, 'Horse', 'Equus caballus', 'Equine'),
+(6, 'Donkey', 'Equus asinus', 'Equine'),
+(7, 'Mule', 'Equus mulus', 'Equine'),
+(8, 'Cat', 'Felis catus', 'Feline'),
+(9, 'Dog', 'Canis lupus familiaris', 'Canine'),
+(10, 'Pig', 'Sus scrofa domesticus', 'Swine'),
+(11, 'Chicken', 'Gallus gallus domesticus', 'Avian'),
+(12, 'Bee', 'Anthophila', 'Apinae');
+
+-- Data for: species_codes
+INSERT INTO species_codes (species_name, species_code) VALUES
+('Cattle', 1),
+('Goat', 2),
+('Sheep', 3),
+('Camel', 4),
+('Donkey', 5),
+('Horse', 6),
+('Mule', 7),
+('Poultry', 8);
+
+-- Data for: breed_type_codes
+INSERT INTO breed_type_codes (breed_type, breed_type_code) VALUES
+('Indigenous', 1),
+('Exotic', 2),
+('Crossbred', 3);
+
+-- Data for: crossbreeding_filial_levels
+INSERT INTO crossbreeding_filial_levels (crossbreeding, filial, exotic_blood_level_percent, exotic_blood_level_fraction) VALUES
+('E1 X L', 'F1', 50.00, '1/2'),
+('E2 X F1', 'F2', 75.00, '3/4'),
+('E3 X F2', 'F3', 87.50, '7/8'),
+('E4 X F3', 'F4', 93.75, '15/16'),
+('E5 X F4', 'F5', 96.88, '31/32'),
+('E6 X F5', 'F6', 98.44, '63/64');
+
+-- Data for: production_purposes
+INSERT INTO production_purposes (purpose, species_affected) VALUES
+('Meat', 'Cattle, Goats, Sheep, Camels'),
+('Milk', 'Cattle, Goats, Camel'),
+('Draft power', 'Cattle, Horses, Donkeys, Camels'),
+('Wool', 'Sheep'),
+('Hide/Skin', 'Cattle, Goats, Sheep'),
+('Dung', 'Cattle, Camel, Horses, Donkeys'),
+('Other (social status)', 'Cattle, Goats, Sheep, Camels, Horses, Mules');
+
+-- Data for: reproduction_status_enum
+INSERT INTO reproduction_status_enum (status, description) VALUES
+('Open', 'The average number of days from calving/kidding/lambing to conception for those animals conceiving, and from calving/kidding/lambing to culling for those failing to do so.'),
+('Inseminated', 'The introduction of semen into the reproductive tract of a female, either through sexual intercourse (natural mating) or the use of an instrument such as a syringe (in the process known as artificial insemination).'),
+('Pregnant', 'In mammals, the period of reproduction during which a female carries one or more live offspring from implantation in the uterus through gestation and birth. It begins when a fertilized zygote implants in the female’s uterus (i.e., conception), and ends once it leaves the uterus (i.e., birth).'),
+('NotPregnant', 'The reproductive status of a female animal that carries no offspring (which can be due to the failure or lack of insemination.'),
+('Birthed', 'The act or process of bearing or bringing forth offspring (also referred to in technical contexts as parturition).'),
+('DoesNotBreed', 'These are animals that do not produce young animals/offspring. This can be due to various infertility reasons (sterile, repeat breeder, anestrus).');
+
+-- Data for: lactation_status_enum
+INSERT INTO lactation_status_enum (species, status, description) VALUES
+('Cow', 'DryPeriod', 'The period from the date of drying (stop of milk production) to next calving (when the animal is pregnant). Generally, the length of the dry period in cows is 60-90 days. Note, the length of the dry period varies with the species of animal.'),
+('Cow', 'Fresh', 'The first phase of the lactation stage, which is critical because there is a sudden increase in milk output and low feed intake. The cow is in a negative energy balance. The body condition score declines and the cow is susceptible to diseases like mastitis and milk fever. For cows, this is the first 14 days.'),
+('Cow', 'EarlyLactation', 'Usually refers to the first 100 days of lactation, during which the animal will achieve peak milk production (in a cow, during the first 90-100 days of lactation). Feed intake lags and the animal is usually losing weight during this period.'),
+('Cow', 'MidLactation', 'Usually refers to lactation days between 100 to 200, during which milk production declines by about 10% per month.'),
+('Cow', 'LateLactation', 'Usually refers to lactation days between 200 to 300, during which milk production gradually declines.'),
+('Cow', 'Lactating', 'It is the period between one calving and the next during which a mother secretes milk from her mammary glands. The cycle is split into phases; the early lactation, mid lactation, late lactation, and the dry periods.'),
+('Camel', 'DryPeriod', 'The dry period allows mammary tissue to recover and repair.'),
+('Camel', 'Fresh', 'The time immediately after parturition.'),
+('Camel', 'EarlyLactation', 'Early lactation in camels is the 1–3-month period after postpartum.'),
+('Camel', 'MidLactation', 'Mid lactation in camels is the 4–6-month period after early lactation.'),
+('Camel', 'LateLactation', 'Late lactation in camels is the time before the dry-off period. It is the time after the seventh month since the lactating camel started providing milk.'),
+('Camel', 'Lactating', 'Lactating is the period between one calving and the next during which a camel secretes milk from her mammary glands.'),
+('Sheep/Goat', 'DryPeriod', 'Ewes require a dry (non-lactating) period before they lamb again. Research has shown that goats require a dry period of at least 28 days, otherwise their production of milk during the next lactation period will be much lower. An ewe should have a dry period not shorter than 28 days and, more appropriately, a minimum of 60 days.'),
+('Sheep/Goat', 'Fresh', 'The time immediately after parturition'),
+('Sheep/Goat', 'EarlyLactation', 'For goats, this milk production period lasts up to 80 days, whereas for sheep the period lasts up to three months after lambing. Milk yield peaks six to nine weeks after kidding, and feed intake does not peak until later. During early lactation, the doe does not go into heat.'),
+('Sheep/Goat', 'MidLactation', 'For goats, mid-lactation is the 80-140 days of milk production, and for sheep, it is 3–7 months of milk production following the early lactation.'),
+('Sheep/Goat', 'LateLactation', 'Late lactation is the stage of lactation immediately after mid-lactation, which is after 140 days for goats and the eighth month for sheep.'),
+('Sheep/Goat', 'Lactating', 'The period between one kidding/lambing and the next during which a doe/ewe secretes milk from her mammary glands.');
+
+-- Data for: health_status_enum
+INSERT INTO health_status_enum (status, description) VALUES
+('Healthy', 'In animals, health may be defined as the absence of clinical signs or disease, or the normal functioning of an organism and normal behavior based on the observation of a certain number of individuals. For the animal to be categorized as “healthy,” there needs to be a final confirmation from a competent animal health professional followed by the production of a health certificate.'),
+('Suspicious', 'An animal can be categorized as “suspicious” when either there is a history of complaints from the animal owner/keeper or when an animal health professional observes some clinical signs of disease (but cannot confirm it). The “suspicious” animal can be re-categorized as “healthy” or “ill” based on the final confirmatory diagnosis.'),
+('Ill', 'Illness is any harmful deviation from the normal structural or functional state of an animal, generally associated with certain clinical signs and differing in nature from physical injury. A diseased animal commonly exhibits clinical signs indicative of its abnormal state.'),
+('InTreatment', 'This means the animal is confirmed to have contracted a (certain) disease(s) and is taking treatment/medication/care, either as an inpatient or outpatient at an animal hospital.'),
+('ToBeCulled', 'This is the condition when the animal is to be removed from the population (herd/flock/production system, etc.). There can be various valid reasons that can result in culling of animals, such as severe disease conditions or performance-related issues.');
+
+-- #############################################
+-- ############# BREEDS DATA ###################
+-- #############################################
+
+-- Data for: breeds (Cattle - Indigenous)
+INSERT INTO breeds (breed_code, name, species_code, breed_type_code, abbreviation, coat_color, horns, hump, location, synonym, pictorial_description_available) VALUES
+('1.01.01', 'Abergele', 1, 1, 'ABE', 'Fine skin, coat color varies considerably with black, spotted, and black and white spotted; black and white animals are abundant color types; other colors include chestnut, gray, and light red', 'Females have thin and medium-sized horns, mostly upward with pointed ends; males have thicker and shorter horns; polled animals are not common', 'Small and not very well developed; small dewlap and naval flap are typical features of the breed', 'Southern Tigray and North Wollo', NULL, 1),
+('1.01.02', 'Abigar', 1, 1, 'ABI', 'Red or black pied', 'Vary in length and shape, but in general, are very long and crescent-shaped, project outward and upward, or are oval; in some cases, horns are loose, unattached, and short', 'Small', 'Border area between Ethiopia (Akobo area of Gambella), Sudan, Illubabor, Kefa', 'Neolithic, Nuer', 1),
+('1.01.03', 'Adwa', 1, 1, 'ADW', 'Mainly red, chestnut, black, roan, and white', 'Upward curving horns', 'Upward curving horns', 'Found around Adwa, in the central zone of the Tigray Region', NULL, 1),
+('1.01.04', 'Afar', 1, 1, 'AFA', 'Usually ash gray, cream, or light chestnut', 'Extremely long—up to 1 meter or more in length—and lyre- or crescent-shaped, sometimes forming a complete circle', 'Small cervico-thoracic hump and small dewlap', 'Afar region, Western Hararghe, Eastern Shewa zones, Tigray and Welo, Ethiopia, and Northeastern Djibouti, South Eritrea', 'Danakil', 1),
+('1.01.05', 'Ambo', 1, 1, 'AMB', 'No information on phenotypic descriptions', 'No information on phenotypic descriptions', 'No information on phenotypic descriptions', 'Located in west Shewa around Ambo, Dandi, Addis Alem and Holeta areas', NULL, 1),
+('1.01.06', 'Arado', 1, 1, 'ARA', 'Mostly red with shades ranging from light to dark pattern; many animals are red-pied or black-pied, and a few of them are black, brown, gray, or white', 'Vary in size and may be large, crescent-shaped, or even absent', 'Smaller in females, larger in males, and the dewlap is relatively large', 'Northern Ethiopia (northern Shire, Adwa and parts of Agame) and in the highlands of Eritrea', 'Ethiopian Highland Zebu, Akele-Guzai, Asaorta, Bileri (Keren)', 1),
+('1.01.07', 'Arsi', 1, 1, 'ARS', 'Red, with a black muzzle, is predominant, although many animals are black, light gray, or white with black spots', 'Small and short', 'Small', 'Highlands of Central Ethiopia especially Arsi, Bale, and Shoa', NULL, 1),
+('1.01.08', 'Bale', 1, 1, 'BAL', 'Black, chestnut, white, or roan', 'No info', 'Prominent hump', 'High plateau of Bale zone, in areas adjacent to the habitat of the Jem-Jem', 'Highland Zebu', 0),
+('1.01.09', 'Begait', 1, 1, 'BEGc', 'Mostly brown, black and white, or beige', 'Small and stumpy, loose hanging down', 'Mostly no hump (a few with a small hump)', 'Tigray and Gondor', 'Barka', 1),
+('1.01.10', 'Boran', 1, 1, 'BOR', 'Usually white or gray fawn, but light brown and black/dark brown shading on the head, neck, shoulder, and hindquarter also occur', 'Short, erect, and thick at the base', 'Straight above and in line with front legs, rounded, well developed', 'Borana zone, Southern Ethiopia, Smoli, and border areas (Northern Kenya, Somalia, and other African countries)', 'Borana, Ethiopian Boran, Somalia Boran, or Awai', 1),
+('1.01.11', 'Fogera', 1, 1, 'FOG', 'White, white with black spots, or black and gray.', 'Short, stumpy, pointed', 'Ranges from thoracic to cervical-thoracic', 'Northwest Ethiopia, mainly in Gojam (around Lake Tana) and Gindor', 'Wagera', 1),
+('1.01.12', 'Goffa', 1, 1, 'GOF', 'Plain black or reddish brown.', 'Small to medium, wedge-like', 'No info', 'Goffa area, principally around Sawla in South Omo.', 'Konso (Knosso)', 1),
+('1.01.13', 'Guraghe', 1, 1, 'GUR', 'Usually red, chestnut, or roan', 'Small and short', 'No info', 'Guraghe and Hadiya areas', 'Ethiopian Highland Zebu', 1),
+('1.01.14', 'Hammer', 1, 1, 'HAM', 'White, gray, chestnut, or roan usually', 'Short to medium', 'Prominent', 'Found in Hammer area, in Southern Omo', NULL, 1),
+('1.01.15', 'Harar', 1, 1, 'HAR', 'White gray, white, red, and black', 'Short and thick', 'Smaller', 'Highlands of Eastern and Western Hararghe Zone', NULL, 1),
+('1.01.16', 'Horro', 1, 1, 'HORc', 'Uniform brown color, slightly lighter around the muzzle and on the flank', 'Medium to large', 'Straight and small to medium', 'Wellega, Ilubabor, Keffa, Shoa', 'Wallega', 1),
+('1.01.17', 'Jem-Jem Zebu', 1, 1, 'JEM', 'Black, usually with white face or patches on a mainly black background', 'Short', 'Small to medium', 'Bale, Sidama', 'Black Zebu, Black Highland Cattle', 0),
+('1.01.18', 'Jiddu', 1, 1, 'JID', 'Ranges from all shades of white and light fawn to dark mahogany or red; in almost all cases, Jiddu cattle have white muzzles, white eyelashes, white hairs', 'Project form pedestal-like', 'Smaller in females than the male; thoracic or cervico-thoracic hump position; the dewlap is moderately well developed and free from folds and fleshiness', 'Southeastern Ethiopia and Southern Somalia, also Zanzibar, Tanzania', NULL, 1),
+('1.01.19', 'Jijjiga', 1, 1, 'JIJ', 'Chestnut, black, white, dark gray, or red', 'Short, mostly polled', 'Erect', 'Ogaden area of the Somali region and border area Eastern Hararghe', 'Ogaden', 1),
+('1.01.20', 'Medenes', 1, 1, 'MED', 'Black and white in varying patterns, other colors are rare', 'No information on descriptions of horn and hump', 'No information on descriptions of horn and hump', 'Distributed in the hot to warm semi-arid lowlands of Welqayit', NULL, 1),
+('1.01.21', 'Mursi', 1, 1, 'MUR', 'Various combinations (solid rare) of gray, white, black, chestnut, and roan, or pied or striped', 'Mainly large, usually curved inwards', 'Prominent and well-developed hump', 'Mursi and Bodi pastoral communities, South Omo zone', NULL, 1),
+('1.01.22', 'Ogaden', 1, 1, 'OGA', 'Uniform plain white, black shade around face', 'In most cases polled, but when present, it is short and thick', 'Thoracic in location, large and prominent in both sexes, but larger in males', 'Ogaden area of Somali Region and bordering East Hararghe', NULL, 1),
+('1.01.23', 'Raya-Azebo', 1, 1, 'RAY-A', 'Chestnut, ash gray, and black spots', 'Lyre-shaped, upward orientation', 'Long, erect, small, and found at cervical thoracic position', 'Tigray, Wollo, Afar', 'Raya, Harmo', 1),
+('1.01.24', 'Sheko', 1, 1, 'SHE', 'Most often brown multi-colored with black and white, however, brown predominates in a plain, patchy, or spotted pattern', 'Short, many are polled', 'Absent or small', 'Southwest Kefa', 'Mitzan, Goda', 1),
+('1.01.25', 'Smada', 1, 1, 'SMA', 'Black, also red, roan, or black-and-white', 'Short to moderate', 'Small to medium', 'North Western Ethiopia', 'Worie, Agew', 1);
+
+-- Data for: breeds (Cattle - Exotic)
+INSERT INTO breeds (breed_code, name, species_code, breed_type_code, abbreviation, origin, coat_color, horns, pictorial_description_available) VALUES
+('1.02.01', 'Holstein Friesian', 1, 2, 'HOL', 'Dutch provinces of North Holland and Friesland and in Schleswig-Holstein in northern Germany', 'Patterns of black and white or red and white', 'Horned, and in some cases polled', 1),
+('1.02.02', 'Jersey', 1, 2, 'JER', 'British breed of small dairy cattle from Jersey, in the British Channel Islands', 'Cream-colored, yellow-brown, light red, and almost black, whereby the head is almost always dark. They often can have a dark eel stripe, black nose, and black tail', 'Curved, often with black tips; there are also genetically polled animals', 1),
+('1.02.03', 'Simmental', 1, 2, 'SIM', 'The Simmental is a Swiss breed of dual-purpose cattle, named after the Simmental—the valley of the Simme river—in the Bernese Oberland, in the canton of Bern in Switzerland', 'Muted, pied, speckled from dark red-brown to light yellow on white base color; lower belly, feet, tail switch and head are mainly white', 'Light with yellow tips; slightly bowed out and up; they can be genetically polled.', 1),
+('1.02.04', 'Ayrshire', 1, 2, 'AYR', 'The Ayrshire is a Scottish breed of dairy cattle; it originates in, and is named for, the county of Ayrshire in south-western Scotland', 'Red and white color pattern; red may range from a very dark, almost black mahogany to a very light brownish-red', 'Lyre-shaped', 1);
+
+-- Data for: crossbreeds (Cattle)
+INSERT INTO crossbreeds (crossbreed_code, name, abbreviation, description, species_code) VALUES
+('1.03.02.01-01.16', 'Holstein- Friesian x Horro', 'HOL-HOR', 'No phenotypic descriptions are available for crossbred breeds.', 1),
+('1.03.02.02-01.07', 'Jersey x Arsi', 'JER-ARS', 'No phenotypic descriptions are available for crossbred breeds.', 1),
+('1.03.02.02-01.16', 'Jersey x Horro', 'JER-HOR', 'No phenotypic descriptions are available for crossbred breeds.', 1),
+('1.03.02.03-01.10', 'Simmental x Boran', 'SIM-BOR', 'No phenotypic descriptions are available for crossbred breeds.', 1),
+('1.03.02.03-01.16', 'Simmental x Horro', 'SIM-', 'No phenotypic descriptions are available for crossbred breeds.', 1);
+
+-- Data for: breeds (Goats - Indigenous)
+INSERT INTO breeds (breed_code, name, species_code, breed_type_code, abbreviation, coat_color, horns, location, pictorial_description_available, description) VALUES
+('2.01.01', 'Abergele', 2, 1, 'ABEg', 'Mostly reddish brown; plain coat color, patchy, and rarely spotted', 'Males have spiral horns directed backwards', 'South Tigray and North Wollo, Ethiopia/Eritrea', 1, 'Wattles are almost entirely absent'),
+('2.01.02', 'Afar', 2, 1, 'AFAg', 'Coat is very fine and short with variable colors (white, light brown, black, black, and flecks), and patches are also common', 'Long, thin, upward-pointing horns', 'Afar, northern and western Hararghe', 1, 'A beard (common in males) and wattle are relatively common'),
+('2.01.03', 'Agew', 2, 1, 'AGE', 'White and/or fawn color', NULL, 'Highlands of South Gonder, Gojam, Wellega and western Shoa; also found in Gojam, Wolega, Ilu Aba Bora', 1, NULL),
+('2.01.04', 'Arab', 2, 1, 'ARA', 'Patchy pattern or smooth white or black', 'Straight, curved, or spiral with upward or backward orientation', 'Benishangul', 1, 'Wattle and beard present'),
+('2.01.05', 'Arsi-Bale', 2, 1, 'ARS-BAL', 'White (male) or brown (female), also black-and-gray, roan, red', 'Males have curved or straight horns mainly pointing backwards, but in some, pointed straight upwards; there are few polled goats in both sexes', 'Highlands of Arsi, Bale and South Shewa, Ethiopia', 1, NULL),
+('2.01.06', 'Begayit', 2, 1, 'BEGg', 'Mainly white with brown patches; their hair is particularly long around the thighs', 'Both sexes have horns that are straight or curved and oriented backwards; males have beards and ruffs', 'Found mainly in western Tigray', 1, NULL),
+('2.01.07', 'Central Highland', 2, 1, 'CEN-HIG', 'Predominant color is reddish-brown, followed by plain, patchy, and rarely spotted', 'Males have horns that are thick, mostly straight and pointed backwards; horns are sometimes curved and rarely spiral', 'Highlands of North Ethiopia and South Eritrea', 1, 'Wattles: Rarely present; commonly have beard and ruff'),
+('2.01.08', 'Felata', 2, 1, 'FEL', 'Most are patchy pattern', 'Straight or curved backward or upward', 'Northwestern lowlands (Bambasi and Mandura)', 1, NULL),
+('2.01.09', 'Gumuz', 2, 1, 'GUM', 'The dominant color is white followed by fawn, black, and gray; white patchy colors are also commonly observed', 'Both males and females have straight and backward-oriented horns; most males also have beards and ruffs', 'Found in areas bordering the Sudan (Metekel, Assosa, and Gambela)', 1, NULL),
+('2.01.10', 'Hararghe Highland', 2, 1, 'HAR-HIG', 'The coat color is white, brown, or black and the hair is short and shiny', 'Commonly polled; horned goats have straight or curved horns', 'Found in the East and West Hararghe highlands', 1, NULL),
+('2.01.11', 'Keffa', 2, 1, 'KEF', 'Coarse, hairy coat, dominant colors are black or brown', 'Most males have straight and backward-oriented horns', 'Widely distributed in the highlands and lowlands of Keffa', 1, 'Wattles: Present in some; males have beards and ruffs'),
+('2.01.12', 'Ille', 2, 1, 'ILLg', 'no information on its phenotypic description can be found', NULL, NULL, 0, NULL),
+('2.01.13', 'Long-eared Somali', 2, 1, 'LON-EAR-SOM', 'Short, smooth coat that is mainly white, with occasional brown, black, and gray', 'Mainly curved or pointed backwards; some of the horns in both sexes have a lateral orientation; high incidence of polledness', 'Found in all parts of the Ogaden, lowlands of Bale and Borana zones of Oromia, and some parts of Sidama Region', 1, NULL),
+('2.01.14', 'Maefur', 2, 1, 'MAE', 'Spotty, pied, and uniform and shaded (light brown, black, and gray).', 'Long and thick', 'Mountainous topographical features of the hillside of Erob district eastern Tigray', 1, NULL),
+('2.01.15', 'Short-eared Somali', 2, 1, 'SHO-EAR_SOM', 'Mainly white; short, smooth hair', 'Upward pointing horns; very few polled with a low incidence of spiral horns in both sexes', 'Northern and eastern Ogaden, Dire Dawa', 1, NULL),
+('2.01.16', 'Western Highland', 2, 1, 'WES-HIG', 'Mostly covered with coarse hair, forming a long coat; most observed color is plain followed by patchy and spotted color patterns', 'Both males and females have horns but some animals are polled; mostly straight and backward-oriented', 'Highlands of South Gonder, Gojam, Wellega and Western Shoa', 1, 'Wattles: Present in some; males also have beards and ruffs'),
+('2.01.17', 'Western Lowlands', 2, 1, 'WES-LOW', 'Fawn (often with white patches), occasionally black or gray', 'Most male goats have straight horns, oriented backwards; few polled males in the population', 'Western lowlands bordering Sudan around Metekel, Assosa, and Ilu Aba Bora', 1, NULL),
+('2.01.18', 'Widar', 2, 1, 'WID', 'Coat is very fine and short with variable colors and color patterns—white, light, patchy brown, black, and flecks', 'Long, thin, upward-pointing horns', 'Afar, northern and western Hararghe, Eritrean rift valley strip', 1, NULL),
+('2.01.19', 'Woyito-Guji', 2, 1, 'WOY-GUJ', 'The body is covered with shiny and smooth hair of various colors; predominant coat colors are reddish-brown in a patchy pattern with black or brown stripes running along the back, on the underside, or on the front of the legs', 'Most males and females are horned; some animals are polled; horns are mostly oriented backward or upward, sometimes laterally', 'North and South Omo, southern Sidama and parts of Wolayta', 1, 'Wattles: Present in some; males have beards and ruffs');
+
+-- Data for: breeds (Goats - Exotic)
+INSERT INTO breeds (breed_code, name, species_code, breed_type_code, abbreviation, origin, coat_color, horns, pictorial_description_available, description) VALUES
+('2.02.01', 'Anglo-Nubian', 2, 2, 'ANG-N', 'UK', 'Can be any color or combination of colors; the large number of color variations and the short silky coat adds to the breed’s appeal', 'May or may not have horns at birth.', 1, NULL),
+('2.02.02', 'Toggenburg', 2, 2, 'TOG', 'Toggenburg Valley of Switzerland', 'Solid, varying from light fawn to dark chocolate with distinct white markings on the ears, face, hind legs, forelegs, each side of tail, and wattle; white markings are distinctive on this breed', 'May or may not be present.', 1, 'Wattle: A white spot may be present at the root of wattles or in that area if no wattle is present');
+
+-- Data for: crossbreeds (Goats)
+INSERT INTO crossbreeds (crossbreed_code, name, abbreviation, description, species_code) VALUES
+('2.03.02.01-01.10', 'Anglo-Nubian x Hararghe Highland', 'ANG-N-HAR-HIG', 'No phenotypic descriptions are available for crossbred breeds.', 2),
+('2.03.02.01-01.13', 'Anglo-Nubian x Long-eared Somali', 'ANG-N-LON-EAR-SOM', 'No phenotypic descriptions are available for crossbred breeds.', 2),
+('2.03.02.02-01.10', 'Toggenberg x Hararghe Highland', 'TOG-HARHIG', 'No phenotypic descriptions are available for crossbred breeds.', 2);
+
+-- Data for: breeds (Sheep - Indigenous)
+INSERT INTO breeds (breed_code, name, species_code, breed_type_code, abbreviation, coat_color, horns, tail, location, synonym, pictorial_description_available) VALUES
+('3.01.01', 'Abergele', 3, 1, 'ABEs', 'Hair coat (white animals have fine hair or wooly udder-coat); predominantly plain brown or white coat, few blacks with brown belly', 'Curved', 'Short, fat, turned up at end, and fused with main part', 'Agew, Tigray, and Amhara communities.', 'Sekota, Tigray highland', 1),
+('3.01.02', 'Afar', 3, 1, 'AFAs', 'Uniform creamy white/ beige coat', 'Polled', 'Rump, wide, fat tail; some have large, fat tails reaching below the hock', 'Afar, Amhara, Tigray', 'Danakil', 1),
+('3.01.03', 'Arsi', 3, 1, 'ARSs', 'Brown, brown with white patches, black, white, and combinations of above colors', 'Males and most females are horned', 'Long, fat, sometimes twisted on the end', NULL, 'Arsi-Bale', 1),
+('3.01.04', 'Begayit', 3, 1, 'BEGs', 'Dominated by white, white and black, gray, slightly red, and creamy white', 'Both male and female sexes are polled', 'Long and thin (up to 50-cm long)', 'North-Western of Tigray Regional State', NULL, 1),
+('3.01.05', 'Begi-Degu', 3, 1, 'BEG-DEG', NULL, NULL, NULL, 'Atsbi-wonberta, Wukro-Kilte Awlaelo, Ofla and Degua-Tembien districts, Tigray', NULL, 1),
+('3.01.06', 'Black Head Somali', 3, 1, 'BLA-HEA-SOM', 'Distinguished by the black color of the head; the body is predominantly white but other colors may be observed', 'Both rams and ewes are hornless, though males can sometimes have rudimentary horns', 'Long and fat with straight, tapering end', 'Ogaden area of the Somali Region', 'Wanke, Ogaden, Berbera, black', 1),
+('3.01.07', 'Bonga', 3, 1, 'BON', 'Predominantly plain brown or with black or white shade, plain white or with brown patches, and black', 'Both sexes are polled', 'Long and fat with straight, tapering end', 'Keffa, Sheka and Bench communities', 'Gesha, Menit', 1),
+('3.01.08', 'Dangila', 3, 1, 'DAN', 'Predominantly brown', 'Both males and females are polled', 'Short, fat', 'Highlands of northwest, south of Lake Tana', 'Washera, Agew', 1),
+('3.01.09', 'Farta', 3, 1, 'FAR', 'Commonly white, brown and black with brown belly, white/brown with brown/white patches;', 'Males are horned', 'Short, fat', 'South Gondar Zone', NULL, 1),
+('3.01.10', 'Horro', 3, 1, 'HORs', 'Cream, brown, black, or pied', 'Both sexes are polled', 'Long and fat, extending below hock, either straight or coiled/twisted at the tapering end; prominent fat tail in males', 'East Welega, West Welega, Illubabor, Jimma and West Shoa zones of Oromia, and some bordering Gambella and Benishangul districts', NULL, 1),
+('3.01.11', 'Ille', 3, 1, 'ILLs', 'No phenotypic descriptions are available for crossbred breeds', NULL, NULL, 'Tigrai highland', NULL, 1),
+('3.01.12', 'Menz', 3, 1, 'MEN', 'Commonly black with white patches, white, brown, white with brown patches', 'Curved', 'Short and fat, turned up at end', 'North Shoa zone of Amhara regional state, Ethiopia', 'Legegora, Shoa, Abyssinian, Ethiopian Highland sheep', 1),
+('3.01.13', 'Tukur', 3, 1, 'TUK', 'Predominantly black', 'Curved', 'Short, fat', 'North Wollo zone of Amhara state', NULL, 1);
+
+-- Data for: breeds (Sheep - Exotic)
+INSERT INTO breeds (breed_code, name, species_code, breed_type_code, abbreviation, origin, coat_color, horns, tail, pictorial_description_available) VALUES
+('3.02.01', 'Awassi', 3, 2, 'AWA', 'Israel, southwest Iran, southern Iraq, Syria, and northeast Arabia', 'Brown or black head, ears, legs, and neck', 'Rams are generally horned and ewes polled with a ”roman” nose and long, pendulous ears', 'Fat', 1),
+('3.02.02', 'Bleu du Maine', 3, 2, 'BLE-DU-MAI', 'Maine et Loire Mayenne and Sarthe regions of western France', 'Dark blue slate-colored head and feet; the breed has no wool on its head or legs', 'Both sexes are polled', 'Long and short in improved breed', 1),
+('3.02.03', 'Corriedale', 3, 2, 'COR', 'New Zealand and Australia', 'Black nose and hooves. A distinguishing characteristic of the breed is their horizontal ears, which sometimes have blue or black spotting', 'Polled', 'Stubbed', 1),
+('3.02.04', 'Dorper', 3, 2, 'DOR', 'South Africa', 'Most have a black head and neck with a white body, but some are solid white', 'Both rams and ewes are polled', 'Reduced', 1),
+('3.02.05', 'Hampshire', 3, 2, 'HAMs', 'Hampshire in Southern England', 'The face is dark in color and practically free of wool from the eyes down', 'Polled, hornless', 'Reduced', 1),
+('3.02.06', 'Merino', 3, 2, 'MER', 'Spain, Italy, South Africa, America, and Australia', 'White faces and legs', 'Some are naturally polled, and some variants have horned rams.', 'Shorter', 1),
+('3.02.07', 'Romney', 3, 2, 'ROM', 'Originated in the Romney Marshes of Kent, England', 'Broad white face, sometimes with a small, wooly top knot.', 'Both sexes are hornless', 'tail set almost even with the chine', 1);
+
+-- Data for: crossbreeds (Sheep)
+INSERT INTO crossbreeds (crossbreed_code, name, abbreviation, description, species_code) VALUES
+('3.03.02.01-01.12', 'Awassi x Menz', 'AWA-MEN', 'No phenotypic descriptions are available for crossbred breeds', 3),
+('3.03.02.02-01.12', 'Bleu du Maine x Menz', 'BLE-DU-MAI', 'No phenotypic descriptions are available for crossbred breeds', 3),
+('3.03.02.04-01.12', 'Dorper x Menz', 'DOR-MEN', 'No phenotypic descriptions are available for crossbred breeds', 3),
+('3.03.02.05-01.12', 'Hampshire x Menz', 'HAM-MEN', 'No phenotypic descriptions are available for crossbred breeds', 3),
+('3.03.02.07-01.12', 'Romney x Menz', 'ROM-MEN', 'No phenotypic descriptions are available for crossbred breeds', 3);
+
+-- Data for: breeds (Camel)
+INSERT INTO breeds (breed_code, name, species_code, breed_type_code, abbreviation, coat_color, hump, location, description, pictorial_description_available) VALUES
+('4.01.01', 'Amibara', 4, 1, 'AMI', 'Brown to gray, short hair length', 'Thoracic and cervico-thoracic hump position', 'Awash in Gewane in the north and Bure-Mudaitu and Afambo in the east and west, respectively', 'Medium-sized udder and teats, smaller body size and weight, and small abdominal and heart girth', 1),
+('4.01.02', 'Gelleb', 4, 1, 'GEL', 'Dominant brown and red coat color, pigmented skin, muzzle, and hooves', 'Prominent, located at thoracic and cervical-thoracic hump position', 'Gode, Afder, and Kebridahar zones of Somali Region', 'Longer in height, long tail, exceptionally wider hip and chest and long chest depth', 1),
+('4.01.03', 'Hoor', 4, 1, 'HOO', 'Varies from brown to red and yellowish white, short hair length', 'Small, thoracic hump position', 'Gode, Afder, and Kebridahar zones of Somali Region', 'Body: Small body size with less beefy conformations, large abdomen, Legs: Short, Udder: Well-developed with prominent milk veins', 1),
+('4.01.04', 'Jijiga', 4, 1, 'JIJc', 'Predominantly brown color, medium hair length', 'Thoracic hump position', 'Jijiga and Fiq zones of Somali Region', 'Medium sized body with short body and barrel shape', 1),
+('4.01.05', 'Liben', 4, 1, 'LIB', 'Brown, red, black, and white', 'Prominent', 'Konso and Gofa districts in SNNPR and Borana zones', 'Neck: Long, Tail: Long, Large ear size, large hoof circumferences with long legs, heavy body weight, large heart and abdominal girth, wide hip and chest', 1),
+('4.01.06', 'Mille', 4, 1, 'MIL', 'Red to brown coat color with short hair length', 'Thoracic hump position', 'Mille to Chifra to the West and Dubti to the North; reach other places through temporary migration to Yalo and Teru districts, Dalifage and Dawe districts of Afar region and up to Bati in Amhara region', 'Medium to long tail, small body size, large ears, short neck, long legs, medium udder and teat sizes', 1),
+('4.01.07', 'Shinille', 4, 1, 'SHI', 'Gray and brown', 'Thoracic hump position', 'Shinille Zone, Chelenko, Daketa and Fafen in Jijiga area and eastern Oromia region', 'Short neck and large/long ears, small body size, large udder, medium teat size, and lightweight, muscled and prominent shoulder and rump', 1);
+
+-- Data for: breeds (Appendix 1)
+INSERT INTO breeds (breed_code, name, species_code, breed_type_code, pictorial_description_available) VALUES
+-- Donkeys
+('5.01.01', 'Abyssinian', 5, 1, 0),
+('5.01.02', 'Afar', 5, 1, 0),
+('5.01.03', 'Haraghe', 5, 1, 0),
+('5.01.04', 'Omo/Hamer', 5, 1, 0),
+('5.01.05', 'Ogaden', 5, 1, 0),
+('5.01.06', 'Sinnar', 5, 1, 0),
+-- Horses
+('6.01.01', 'Dongola', 6, 1, 0),
+('6.01.02', 'Oromo', 6, 1, 0),
+-- Mules
+('7.01.01', 'Sinnar', 7, 3, 0),
+('7.01.02', 'Wollo', 7, 3, 0),
+-- Poultry (Indigenous)
+('8.01.01', 'Chefe', 8, 1, 0),
+('8.01.02', 'Gebsima', 8, 1, 0),
+('8.01.03', 'Horro', 8, 1, 0),
+('8.01.04', 'Jarso', 8, 1, 0),
+('8.01.05', 'Keyi', 8, 1, 0),
+('8.01.06', 'Naked Neck', 8, 1, 0),
+('8.01.07', 'Netch', 8, 1, 0),
+('8.01.08', 'Tepi', 8, 1, 0),
+('8.01.09', 'Tikur', 8, 1, 0),
+('8.01.10', 'Tilili', 8, 1, 0),
+-- Poultry (Exotic/Improved)
+('8.02.01', 'Kuroiler', 8, 2, 0),
+('8.02.02', 'Sasso', 8, 2, 0),
+('8.02.03', 'Sasso-R', 8, 2, 0);
+
+-- #############################################
+-- ###### EVENT ENUMERATIONS DATA ##############
+-- #############################################
+
+INSERT INTO arrival_reason_enum (reason) VALUES ('Purchase'), ('InternalTransfer'), ('Imported'), ('StudService'), ('StudServiceReturn'), ('Slaughter'), ('Agistment'), ('AgistmentReturn'), ('Show'), ('ShowReturn'), ('Sale'), ('SaleReturn'), ('Other');
+INSERT INTO registration_reason_enum (reason) VALUES ('Born');
+INSERT INTO tag_type_enum (type) VALUES ('Plastic Ear Tag');
+INSERT INTO retagging_reason_enum (reason) VALUES ('Lost'), ('Damaged'), ('Theft'), ('Others');
+INSERT INTO death_reason_enum (reason) VALUES ('Parturition'), ('Disease'), ('Accident'), ('Slaughtered'), ('Culled'), ('Other'), ('Unknown'), ('Age'), ('Drought'), ('Poisoning');
+INSERT INTO disposal_method_enum (method) VALUES ('Burial'), ('Landfill'), ('Incineration'), ('Rendering'), ('Composting'), ('Chemical digestion'), ('Others');
+INSERT INTO departure_reason_enum (reason) VALUES ('Age'), ('Health'), ('Slaughter'), ('Sale'), ('Mastitis'), ('Fertility'), ('Nutrition'), ('Parturition'), ('Production'), ('MilkingAbility'), ('Behavior'), ('Other'), ('Unknown');
+INSERT INTO exit_reason_enum (reason) VALUES ('Death'), ('Theft'), ('Other'), ('Unknown');
+INSERT INTO test_day_code_enum (code) VALUES ('Dry'), ('SamplingImpossible'), ('Sick'), ('Milking');
+INSERT INTO unit_code_enum (code, description) VALUES ('KGM', 'Kilogram');
+INSERT INTO milk_characteristics (characteristic, unit_of_measurement) VALUES ('SCC', 'SCC|Somatic cell count|x1000 cells/ml|NCL'), ('FAT', 'FAT|Fat|%|VP'), ('PROTEIN', 'PROTEIN|Protein|%|VP'), ('LAC', 'LAC|Lactose|%|VP'), ('UREA', 'UREA|Urea|mg/l|M1'), ('BLOOD', 'BLOOD|Blood|true/false|A99'), ('ACETONE', 'ACETONE|Acetone|mmol/l|M33'), ('BHB', 'BHB|Beta hydroxybutyrate|mmol/l|M33'), ('LDH', 'LDH|Lactate dehydrogenase|IU/l|'), ('PRO', 'PRO|Progesterone|mmol/l|M33'), ('AVGCOND', 'AVGCOND|Average conductivity value of the milk at 25 ° C|mS/cm|H61'), ('MAXCOND', 'MAXCOND|Maximum conductivity value of the milk at 25 ° C|mS/cm|H61'), ('AVGFLWR', 'AVGFLWR|Average flow rate|Kg/min|F31'), ('MAXFLWR', 'MAXFLWR|Max flow rate|Kg/min|F31'), ('WEIGHT', 'WEIGHT|Weight of animal|Kg|KGM'), ('TEMPERATURE', 'PAG|Pregnancy associated glycoprotein|mmol/l|M33'), ('Mineral (Ash)', 'Percentage of ash by weight in GRAMS');
+INSERT INTO insemination_type_enum (type) VALUES ('NaturalService'), ('ArtificialInsemination'), ('Implantation');
+INSERT INTO abortion_reason_enum (reason) VALUES ('Infection'), ('Mechanical'), ('NonSpecific'), ('Unknown');
+INSERT INTO birthing_ease_enum (ease_level, example) VALUES ('Normal', NULL), ('MinorAssistance', 'e.g., position/presentation and posture adjustment'), ('Dystocia', NULL), ('UterineProlapse', NULL), ('RetainedPlacenta', NULL), ('CaesareanSection', NULL), ('Others', NULL);
+INSERT INTO progeny_status_enum (status) VALUES ('MaleNormal'), ('MaleDefect'), ('FemaleNormal'), ('FemaleDefect');
+INSERT INTO progeny_birth_size_enum (size) VALUES ('Small'), ('Medium'), ('Large');
+INSERT INTO progeny_weight_method_enum (method) VALUES ('WeighingBalance'), ('Girth'), ('WalkOver'), ('Estimated'), ('Imaged'), ('GroupAverage');
+INSERT INTO pregnancy_diagnosis_method_enum (method) VALUES ('Echography'), ('RectalPalpation'), ('Blood'), ('Milk'), ('Visual'), ('Other');
+INSERT INTO pregnancy_diagnosis_result_enum (result) VALUES ('Empty'), ('Pregnant'), ('Doubtful');
+INSERT INTO estrus_sync_method_enum (method, description) VALUES ('PG', 'Prostaglandin F2α (PG) based'), ('GnRH', 'Gonadotropin releasing hormone (GnRH) based'), ('Progestin', 'Progestin based'), ('Combination', NULL);
+INSERT INTO heat_detection_method_enum (method) VALUES ('Chemical'), ('Visual'), ('Pedometer'), ('Other');
+INSERT INTO heat_certainty_enum (certainty) VALUES ('InHeat'), ('Suspect');
+INSERT INTO heat_signs_enum (sign) VALUES ('Mucus'), ('ClearMucus'), ('InterestedInOtherAnimals'), ('Bawling'), ('Blood'), ('StandsUnder');
+INSERT INTO heat_intensity_enum (intensity) VALUES ('VeryWeak'), ('Weak'), ('Normal'), ('Strong'), ('VeryStrong');
+INSERT INTO weight_method_enum (method) VALUES ('WeighingBalance'), ('WalkOver'), ('Girth'), ('Estimated'), ('Imaged'), ('GroupAverage');
+INSERT INTO disease_stage_enum (stage) VALUES ('Peracute'), ('Acute'), ('SubAcute'), ('Chronic'), ('Other');
+INSERT INTO disease_severity_enum (severity) VALUES ('Light'), ('Moderate'), ('Severe');
+INSERT INTO affected_system_enum (system) VALUES ('CentralNervous'), ('SensoryOrgans'), ('Digestive'), ('Respiratory'), ('Cardiovascular'), ('Locomotory'), ('Urinary'), ('Reproductive'), ('Lymphoid'), ('Integumentary'), ('Muscular'), ('Others');
+INSERT INTO administration_route_enum (route) VALUES ('Intravenous'), ('Intramuscular'), ('Subcutaneous'), ('PerOs'), ('IntramammaryInfusion'), ('Intrauterine'), ('EyeDroplet'), ('Intranasal'), ('Intraperitoneal'), ('Topical'), ('Others');
+INSERT INTO vaccination_purpose_enum (purpose) VALUES ('Control'), ('Prophylaxis');
+INSERT INTO vaccination_type_enum (type) VALUES ('Killed'), ('live attenuated'), ('live');
+
+-- #############################################
+-- ###### ANIMAL HEALTH DATA ##############
+-- #############################################
+
+-- Data for: disease_categories
+INSERT INTO disease_categories (code, name, parent_code) VALUES
+('01', 'Disease', NULL),
+('02', 'Diagnosis', NULL),
+('03', 'Treatment', NULL),
+('04', 'Husbandry procedures', NULL),
+('05', 'Vaccinations', NULL),
+('01.01', 'Infectious and other microbe-related diseases', '01'),
+('01.01.01', 'Bacterial infections', '01.01'),
+('01.01.02', 'Viral infections', '01.01'),
+('01.01.03', 'Prion', '01.01'),
+('01.01.04', 'Fungal infections', '01.01'),
+('01.02', 'Parasitic', '01'),
+('01.03', 'System base disorders/diseases', '01'),
+('01.03.01', 'Integumentary system disorder', '01.03'),
+('01.03.01.01', 'Disorder/disease of skin, subcutis, and coat', '01.03.01'),
+('01.03.01.02', 'Horn diseases (Disorder)', '01.03.01'),
+('01.03.02', 'Lymphoid system abnormalities', '01.03'),
+('01.03.03', 'Diseases of cardiovascular system', '01.03'),
+('01.03.04', 'Diseases of the respiratory tract', '01.03'),
+('01.03.05', 'Diseases of the digestive tract', '01.03'),
+('01.03.06', 'Diseases or disorder of the urinary system', '01.03'),
+('01.03.07', 'Diseases of the locomotory system', '01.03'),
+('01.03.08', 'Diseases of the CNS and the sensory organs', '01.03'),
+('01.03.09', 'Reproductive disorders', '01.03'),
+('01.03.09.01', 'Female reproductive disorders or diseases', '01.03.09'),
+('01.03.09.02', 'Reproductive disorders in males', '01.03.09'),
+('01.03.10', 'Metabolic diseases and deficiencies', '01.03'),
+('01.03.11', 'Poisoning', '01.03'),
+('01.03.12', 'Behavioral disorders and general findings', '01.03'),
+('05.01', 'Local vaccines', '05'),
+('05.01.01', 'Vaccines of bacterial diseases', '05.01'),
+('05.01.02', 'Vaccine of viral diseases', '05.01'),
+('05.02', 'Imported vaccines', '05');
+
+-- Data for: diseases (Truncated for brevity, full list is very long)
+-- The full list from Tables 61, 62, 63 would be inserted here. Example:
+INSERT INTO diseases (code, name, abbreviation, category_code, species_affected, causative_agent, other_names, notes) VALUES
+('01.01.01.01', 'Actinobacillosis', 'Actn', '01.01.01', 'Cattle, sheep, and goats', 'Actinobacillus', 'Wooden tongue', NULL),
+('01.01.01.02', 'Actinomycosis', 'Actm', '01.01.01', 'Cattle, sheep, and camels', 'Actinomyces', 'Lumpy jaw', NULL),
+('01.01.01.03', 'Anaplasmosis', 'Anap', '01.01.01', 'Cattle, sheep, goats, and camels', 'Anaplasma marginale, A. centrale', NULL, '**'),
+('01.01.01.04', 'Anthrax', 'Ant', '01.01.01', 'Cattle, sheep, goat, camels, horses, mules, and donkeys', 'Bacillus anthracis', NULL, '**'),
+('01.02.01', 'Babesiosis', 'Bab', '01.02', 'Cattle, sheep, goats, and camels', 'Babesia species (eg. B. divergens, Babesia bovis, B. begemina, B. ovis, etc.)', 'Redwater, Tick fever', NULL),
+('01.03.01.01.01', 'Abscess', 'AbSSC', '01.03.01.01', NULL, NULL, NULL, NULL),
+('01.03.01.01.02', 'Acne', 'Acne', '01.03.01.01', NULL, NULL, NULL, NULL);
+-- ... and so on for all 215+ diseases/disorders.
+
+-- Data for: diagnostic_methods
+INSERT INTO diagnostic_methods (code, method, abbreviation) VALUES
+('02.01', 'Clinical examination', 'ClinEx'), ('02.02', 'Bacteriology', 'Bact'), ('02.03', 'Virology', 'Virol'), ('02.04', 'Mycology', 'Mycol'), ('02.05', 'Parasitology', 'Paras'), ('02.06', 'Molecular biology', 'MolBio'), ('02.07', 'Clinical chemistry', 'ClinChem'), ('02.08', 'Cytology', 'Cytol'), ('02.09', 'Fluid Analysis', 'FluiAna'), ('02.10', 'Hematology', 'Hemat'), ('02.11', 'Histopathology', 'HistPath'), ('02.12', 'Serology', 'Serol'), ('02.13', 'Toxicology', 'Toxic'), ('02.14', 'Radiography', 'RadiGra'), ('02.15', 'Ultrasonography (ultrasound imaging or ultrasound scanning or sonography)', 'UltGra'), ('02.16', 'Computerized tomography scan', 'CTS'), ('02.17', 'Magnetic resonance imaging', 'MRI'), ('02.18', 'Cystoscopy', 'CytoSc'), ('02.19', 'Colonoscopy', 'ColSc'), ('02.20', 'Endoscopy', 'EndoSc'), ('02.21', 'Rhinoscopy', 'RhinSc'), ('02.22', 'Bronchoscopy', 'BronSc'), ('02.23', 'Endocrine testing', 'EndTest'), ('02.24', 'Fluoroscopy', 'FlurSc'), ('02.25', 'Biopsy', 'Biop'), ('02.26', 'Others', 'Oth');
+
+-- Data for: treatments
+INSERT INTO treatments (code, treatment_name, abbreviation) VALUES
+('03.01', 'Palliative', 'Pall'), ('03.02', 'Preventive', 'Prev'), ('03.03', 'Curative', 'Curat'), ('03.04', 'Antibacterial', 'AntBac'), ('03.05', 'Antiviral', 'AntVir'), ('03.06', 'Antifungals', 'AntFun'), ('03.07', 'Anthelmintic', 'AntHelm'), ('03.08', 'Ectoparasiticide', 'EctPar'), ('03.09', 'Antidote', 'AntDot'), ('03.10', 'Anti-pain', 'AntPai'), ('03.11', 'Minor surgery', 'MinSurg'), ('03.12', 'Major surgery (operative procedure)', 'MajSurg');
+
+-- Data for: husbandry_procedures
+INSERT INTO husbandry_procedures (code, procedure_name, abbreviation) VALUES
+('04.01', 'Cesarean section', 'CS'), ('04.02', 'Dehorning (amputation of horn)', 'Deho'), ('04.03', 'Fetotomy', 'Feto'), ('04.04', 'Grooming or brushing', 'Groom'), ('04.05', 'Hoof trimming', 'HooTr'), ('04.06', 'Laparotomy', 'Lapa'), ('04.07', 'Neutering (castration)', 'Neut'), ('04.08', 'Ovariohysterectomy', 'OvHy'), ('04.09', 'Shortening of horns', 'ShorH'), ('04.10', 'Rumenotomy (Trocarization)', 'Rumt'), ('04.11', 'Thoracotomy', 'Thort'), ('04.12', 'Wound management', 'WouM');
+
+-- Data for: vaccines (Local)
+INSERT INTO vaccines (name, abbreviation, code, animal_species, production_type) VALUES
+('Anthrax vaccine', 'LVaccAnt', '05.01.01.01', 'Cattle, sheep, goats, Camel', 'Local'),
+('Blackleg Vaccine', 'LVaccBL', '05.01.01.02', 'Cattle, sheep, goats, and camel', 'Local'),
+('Bovine pasteurellosis (Haemorrhagic Septicemia) vaccine', 'LVaccBPast', '05.01.01.03', 'Cattle', 'Local'),
+('Contagious bovine pleuropneumonia vaccine', 'LVaccCBPP', '05.01.01.04', 'Cattle (including calves)', 'Local'),
+('Contagious caprine pleuropneumonia vaccine', 'LVaccCCPP', '05.01.01.05', 'Goats', 'Local'),
+('Ovine pasteurellosis vaccine', 'LVaccOPast', '05.01.01.06', 'Sheep and goats', 'Local'),
+('African horse sickness vaccine', 'LVaccAHS', '05.01.02.01', 'Horses, donkeys, and mules', 'Local'),
+('Camelpox vaccine', 'LVaccCaPo', '05.01.02.02', 'Camel', 'Local'),
+('Foot and mouth disease vaccine (Trivalent vaccine containing O, A, SAT 2 serotype)', 'LVaccFMDT', '05.01.02.03', 'Cattle', 'Local'),
+('Fowl cholera vaccine', 'LVaccFoCh', '05.01.02.04', 'Chickens', 'Local'),
+('Fowlpox vaccine', 'LVaccFoPo', '05.01.02.05', 'Chickens', 'Local'),
+('Fowl typhoid vaccine', 'LVaccFoTh', '05.01.02.06', 'Chickens', 'Local'),
+('Inactivated Newcastle vaccine', 'LVaccNCDI', '05.01.02.07.01', 'Chickens', 'Local'),
+('Inactivated Newcastle oil-emulsion vaccine', 'LVaccNCDIE', '05.01.02.07.02', 'Chickens', 'Local'),
+('Live Newcastle disease vaccine', 'LVaccNDVLE', '05.01.02.07.03', 'Chickens', 'Local'),
+('Newcastle thermostable vaccine', 'LVaccNCDT', '05.01.02.07.04', 'Chickens', 'Local'),
+('Infectious bursal disease/Gumboro vaccine', 'LVaccIBD', '05.01.02.08', 'Chickens', 'Local'),
+('Lumpy skin disease vaccine', 'LVaccLSD', '05.01.02.09', 'Cattle', 'Local'),
+('Marek''s disease vaccine', 'LVaccMrk', '05.01.02.10', 'Chicken', 'Local'),
+('Peste des petits ruminants vaccinés', 'LVaccPPR', '05.01.02.11.01', 'Goats and sheep', 'Local'),
+('Peste des petits ruminants vacciné thermotolerant vaccine', 'LVaccPPRT', '05.01.02.11.02', 'Goats and sheep', 'Local'),
+('Rabies vaccine', 'LVaccRab', '05.01.02.12', 'Dog', 'Local'),
+('Sheep and goat pox vaccine', 'LVaccShGPo', '05.01.02.13', 'Goats and sheep', 'Local');
+
+-- Data for: vaccines (Imported - partial list)
+INSERT INTO vaccines (name, abbreviation, code, animal_species, production_type) VALUES
+('Avian encephalomyelitis virus + fowl pox +laryngotracheitis virus', 'IVaccAEFPL', '05.02.01', 'Chickens', 'Imported'),
+('Attenuated infectious bronchitis coronavirus cr88121 strain', 'IVaccIBCV', '05.02.02.01', 'Chickens', 'Imported'),
+('Avian infectious bursal disease virus LIBDIV strain', 'IVaccIBD', '05.02.03.01', 'Chickens', 'Imported'),
+('Live Marek’s disease virus serotype 1, strain cvi988', 'IVaccMD988', '05.02.04.01', 'Chickens', 'Imported'),
+('Live attenuated mycoplasma Gallisepticum strain mg 6/85', 'IVaccMycG6', '05.02.05.01', 'Chickens', 'Imported'),
+('Inactivated newcastle disease virus strain NDV-SZ', 'IVaccNCDSZ', '05.02.06.01', 'Chicken', 'Imported'),
+('Inactivated rabies virus antigen', 'IVaccRab', '05.02.07.01', 'Dogs and cats', 'Imported');
+
+
+-- #############################################
+-- ###### ADDITIONAL ATTRIBUTES DATA ###########
+-- #############################################
+
+INSERT INTO production_system_enum (system) VALUES ('Urban livestock production'), ('Per-urban livestock production'), ('Mixed farming'), ('Pastoral'), ('Agro-pastoral');
+INSERT INTO investment_level_enum (level) VALUES ('Intensive farming'), ('Extensive farming'), ('Semi-intensive livestock farming');
+
+-- Data for: farm_size_extensive
+INSERT INTO farm_size_extensive (species, system_type, small_range, medium_range, large_range) VALUES
+('Cattle', 'Pastoral', '<10', '[11-25]', '>26'), ('Sheep', 'Pastoral', '<12', '[13-28]', '>29'), ('Goats', 'Pastoral', '<18', '[19-31]', '>32'),
+('Cattle', 'Agro-Pastoral', '<7', '[8-15]', '>16'), ('Sheep', 'Agro-Pastoral', '<6', '[7-21]', '>22'), ('Goats', 'Agro-Pastoral', '<10', '[11-21]', '>22'),
+('Cattle', 'Mixed Farming', '<5', '[6-15]', '>16'), ('Sheep', 'Mixed Farming', '<4', '[5-15]', '>16'), ('Goats', 'Mixed Farming', '<4', '[5-12]', '>13');
+
+-- Data for: farm_size_intensive
+INSERT INTO farm_size_intensive (species, system_subtype, small_range, medium_range, large_range) VALUES
+('Cattle', 'Feedlot Semi-intensive', '<10', '[11-20]', '>21'),
+('Cattle', 'Feedlot Intensive', '<=50', '[51-200]', '>201'),
+('Cattle', 'Dairy Semi-intensive', '<5', '[5-10]', '>11'),
+('Cattle', 'Dairy Intensive', '<30', '[31-100]', '>101');
+
+INSERT INTO farm_size_enum (size) VALUES ('Small'), ('Medium'), ('LargeScale');
+
+-- Data for: cattle_age_dentition
+INSERT INTO cattle_age_dentition (age_of_cattle, description_of_teeth) VALUES
+('About less than a year', 'Full set of deciduous incisors'),
+('1-2 years', 'Two or more of the temporary incisor teeth present.'),
+('3 years', 'Permanent first intermediates, one on each side of the pinchers, are cut. Usually these are fully developed at three years'),
+('3 and half years', 'The second intermediates or laterals are cut. They are on a level with the first intermediates and begin to wear at four years'),
+('4 and half years', 'The corner teeth are replaced. At five years, the animal usually has the full complement of incisors with the corners fully developed.'),
+('5 to 6 years', 'The permanent pinchers are leveled, both pairs of intermediates are partially leveled, and the corner incisors show wear.'),
+('7 to 10 years', 'At seven or eight years, the pinchers show noticeable wear; At eight or nine years, the middle pairs show noticeable wear; and at 10 years, the corner teeth show noticeable wear.'),
+('Above 10 years', 'After the animal passes the sixth year, the arch gradually loses its rounded contour and becomes nearly straight by the 12th year. In the meantime, the teeth gradually become triangular in shape, distinctly separated, and show progressive wearing to stubs.');
+
+-- Data for: camel_age_dentition
+INSERT INTO camel_age_dentition (age, features) VALUES
+('Less than 3 years', 'Eruption of all deciduous teeth DI1, DI2, DI3'),
+('About 3 years', 'DI1 in wear'),
+('About 4 years', 'All the incisors are quite worn down, with square or irregular table and eruption of permanent canine teeth'),
+('About 5 years', 'Eruption of permanent I1 (central)'),
+('About 6 years', 'Eruption of permanent I2 (lateral)'),
+('About 7 years', 'Eruption of permanent I3 (corner)'),
+('About 7 1/2 years', 'All the permanent incisors have erupted and canine teeth have reached their full size'),
+('About 9 years', 'Permanent I1 in wear'),
+('About 10 years', 'Permanent I2 in wear'),
+('About 11 years', 'Permanent I3 in wear'),
+('About 12 years', 'I1 is stub with square table'),
+('About 13 years', 'I2 is stub with square table'),
+('About 14 years', 'I3 is stub with square table'),
+('Above 15 years', 'Increase wide gap in the interdental space');
+
+-- Data for: ruminant_age_dentition
+INSERT INTO ruminant_age_dentition (no_of_permanent_incisors, goat_age_years, sheep_age_years) VALUES
+('0 pair', 'Under 1', NULL),
+('1 pair', '1-2', '1-1.5'),
+('2 Pairs', '2-3', '1.5-2'),
+('3 Pairs', '3-4', '2.5-3'),
+('4 Pairs', '> 4', '> 3'),
+('Broken Mouth', 'Aged', 'Aged');
+
+-- Data for: cattle_bcs_feedlot
+INSERT INTO cattle_bcs_feedlot (score, body_condition, fatness, description) VALUES
+(1, 'Poor', 'Very Thin', 'The spinous process is prominent and sharp. The transverse processes are also sharp; the fingers pass easily under the ends, and it is possible to feel between each process. The eye muscle areas are shallow with no fat cover.'),
+(2, 'Fair', 'Thin', 'The spinous process feels prominent but smooth, and individual processes can be felt only as fine corrugations. The transverse process is smooth and rounded, and it is possible to pass the fingers under the ends with a little pressure. The eye muscle area is of moderate depth, but has little fat cover.'),
+(3, 'Good', 'Moderate', 'The spinous process is detected only as a small elevation; it is smooth and rounded and individual bones can be felt only with pressure. The transverse process is smooth and well covered, and firm pressure is required to feel over the ends. The eye muscle area is full and has a moderate degree of fat cover.'),
+(4, 'Very Good', 'Fat', 'The spinous processes can just be detected with pressure as a hard line between the fat-covered eye muscle area. The end of the transverse process cannot be felt. The eye muscle area is full and has a thick covering of fat.'),
+(5, 'Excellent', 'Very Fat', 'The spinous processes can just be detected with pressure as a hard line between the fat-covered eye muscle area. The end of the transverse process cannot be felt. The eye muscle area is full and has a very thick covering of fat.');
+
+-- Data for: cattle_conformation_score_feedlot
+INSERT INTO cattle_conformation_score_feedlot (score, grading, description) VALUES
+(1, 'Fair', 'Very short. Small heart girth in relation to overall body size. Features on the skeletal size, such as lordosis or kyphosis, or feet and legs, such as being post-legged, buck-kneed, splay-footed, or sickle-hocked, among others'),
+(2, 'Good', 'Animals of medium height. Shorter but straight rump, loin, and back. Medium heart girth. Straight legs.'),
+(3, 'Excellent', 'Cattle of good height (tall). Long and straight rump, loin, and back. Large heart girth. Straight legs');
+
+-- Data for: cattle_grading_feedlot
+INSERT INTO cattle_grading_feedlot (grade, sex, weight_kg, age_years, bcs, bcofs) VALUES
+(1, 'Neutered male', 'Minimum 300', '1-4', 'Excellent', 'Excellent'),
+(1, 'Non-neutered male', 'Minimum 300', '1-4', 'Excellent', 'Excellent'),
+(1, 'Female', 'Minimum 200', '1-4', 'Excellent', 'Excellent'),
+(2, 'Neutered male', 'Minimum 200', '1-5', 'Good', 'Good'),
+(2, 'Non-neutered male', 'Minimum 200', '1-5', 'Good', 'Good'),
+(2, 'Female', 'No Limit', '4-5', 'Good', 'Good'),
+(3, 'All sex categories', 'No limit', 'Min. 2', 'Fair', 'Fair'),
+(4, 'All sex categories', 'No limit', 'No limit', 'Poor', 'Fair');
+
+-- Data for: cattle_bcs_dairy
+INSERT INTO cattle_bcs_dairy (score, condition, description) VALUES
+(1, 'Emaciated', 'Ends of short ribs sharp to touch. Loins have a prominent shelf-like appearance. Individual vertebrae of backbone are prominent. Hook and pin bones are sharply defined and angular in appearance. Sunken and hollow on either side of the tail head, and the vulva is prominent. Tail head is a deep cavity with no fatty tissue under the skin. Skin is fairly flexible but coat condition is often rough.'),
+(2, 'Thin', 'Ends of short ribs can be felt, but less prominent than BCS 1, and less of a shelf-like appearance. Hook and pin bones are still prominent, but rounder and more smoothed over. Both sides of the tail are still fairly sunken and hollow, but the vulva is less prominent. Some fat under the skin. Skin is flexible.'),
+(3, 'Average', 'Short ribs can be felt with moderate pressure. Overhanging shelf-like appearance gone. Hook and pin bones are visible, but smooth and rounded, and a fat pad is palpable. Both sides of the tail are somewhat hollow, but better filled out than previous BCS, no evidence of fat deposits.'),
+(4, 'Heavy', 'Short ribs not visible and only felt with firm pressure and have a rounded over appearance. Ridge of the backbone flattening over loin, rump and chine areas. Area between hooks and pins is almost flat. Sides of the tail are no longer hollow and some fat deposits are palpable.'),
+(5, 'Fat', 'Short ribs cannot be seen or felt. Vertebrae in chine, loin, and rump are not visible. Obvious fat deposits around the tailbone and over the ribs. Thighs curve out and the brisket and flanks are heavy.');
+
+-- Data for: cattle_bcs_dairy_targets
+INSERT INTO cattle_bcs_dairy_targets (lactation_stage, recommended_target_bcs) VALUES
+('Dry off', '3.25-3.75'), ('Calving', '3.25-3.75'), ('Early lactation', '2.50-3.25'), ('Mid-lactation', '2.75-3.25'), ('Late lactation', '3.00-3.50'), ('Growing heifers', '2.75-3.25'), ('Heifers at calving', '3.25-3.75');
+
+-- Data for: dairy_conformation_traits
+INSERT INTO dairy_conformation_traits (observed_structure, scored_value_percent, description) VALUES
+('Frame, including rump', 15, 'The skeletal parts of the cow, with the exception of feet and legs, should be evaluated. Rump: Long and wide throughout with pin bones slightly lower than hip bones. Back: Straight and strong. Loin: broad, strong, and nearly level.'),
+('Dairy Character', 20, 'Major consideration is given to general openness and angularity while maintaining strength, flatness of bone, and freedom from coarseness. Ribs: Wide apart. Thighs: Lean. Withers: Sharp. Neck: Long, lean. Skin: Thin, loose, and pliable.'),
+('Body Capacity', 10, 'The volumetric measurement of the capacity of the cow is evaluated, with age taken into consideration. Barrel: Long, deep, and wide. Chest: Deep and wide floor with well-sprung fore ribs blending into the shoulders.'),
+('Feet and Legs', 15, 'Feet: steep angle and deep heel with short, well-rounded, closed toes. Rear Legs: Rear view - straight, wide apart with feet squarely placed. Side view - a moderate set (angle) to the hock. Hocks: Cleanly molded. Pasterns: Short and strong.'),
+('Udder', 40, 'Teat placement: squarely placed. Rear udder: Wide and high, firmly attached. Udder cleft: Evidence of a strong suspensory ligament. Fore udder: Firmly attached with moderate length and ample capacity. Teats: Cylindrical shape and uniform size.');
+
+-- Data for: camel_bcs
+INSERT INTO camel_bcs (score, body_condition, fatness, description) VALUES
+(1, 'Poor', 'Emaciated', 'Little or no fat in the hump, hump hairy, and may be leaning to one side. Ribs clearly visible (skin on bones), transverse apophysis clearly prominent and sacro-tuberal ligament concave.'),
+(2, 'Fair', 'Thin', 'Hump with moderate development rising 5% higher than chest depth, but may also be leaning to one side. Ribs visible in front, transverse apophysis visible all along the back and sacro-tuberal ligament flat'),
+(3, 'Good', 'Medium', 'Hump with good development and rising to 10% higher than chest depth. Hump is still sculptured inwards on both sides and still fits over the chest and abdominal area. Ribs invisible in front of the thorax, transverse apophysis slightly visible and sacro-tuberal ligament flat to convex. Camels with BCS 3 are generally considered suitable for slaughter.'),
+(4, 'Very Good', 'Fat', 'Hump fully developed and rising to 15% higher than chest depth. Hump rounded outwards on both sides and runs from the shoulder to the rump. Ribs invisible, transverse apophysis invisible and sacro-tuberal ligament convex. Camels in BCS 4 are generally considered suitable for slaughter.'),
+(5, 'Excellent', 'Very Fat', 'Hump over-extended and rises more than 15% higher than the chest or the hump is so full that it is rounded on the sides like a semicircle. Camels in BCS 5 are considered to be excessively fat.');
+
+-- Data for: camel_conformation
+INSERT INTO camel_conformation (score, body_conformation, description) VALUES
+(1, 'Fair', 'Camels with short height and small frame, straight rump, loin and back, medium heart girth and straight legs and may have some defective features such as lordosis or kyphosis, or feet and legs such as being post-legged, buck-kneed, splay footed, or sickle-hocked.'),
+(2, 'Good', 'Camels of medium height (not as tall as the one with excellent conformation), with medium frame, shorter but straight rump, loin and back, medium heart girth and straight legs.'),
+(3, 'Excellent', 'Camels of good height (tall), with large frame and long and straight rump, loin and back, large heart girth, and straight legs.');
+
+-- Data for: camel_grading
+INSERT INTO camel_grading (grade, age_years, sex, body_condition, body_conformation) VALUES
+('I', '< 7', 'Male', 'Excellent', 'Excellent'), ('I', '[7-15]', 'Male/Female', 'Excellent', 'Excellent'),
+('II', '< 3', 'Male', 'Good', 'Good'), ('II', '[3-15]', 'Male/Female', 'Good', 'Good'),
+('III', '< 3', 'Male/Female', 'Fair', 'Good'), -- Assuming <3 refers to male here based on text
+('III', '[7-15]', 'Male/Female', 'Fair', 'Good'), ('III', '[3-7]', 'Male/Female', 'Fair', 'Good'),
+('IV', '< 3', 'Male', 'Poor', 'Poor'), ('IV', '[7-15]', 'Male/Female', 'Poor', 'Poor'), ('IV', '[3-7]', 'Male/Female', 'Poor', 'Poor'),
+('IV', '> 15', 'Male/Female', 'Poor', 'Poor'); -- Merged row from >15
+
+-- Data for: ruminant_bcs
+INSERT INTO ruminant_bcs (score, body_condition, lumbar_region_desc, rib_cage_desc, sternum_desc) VALUES
+(1, 'Poor', 'The spinous processes are prominent and sharp. The transverse processes are also sharp; the fingers pass easily under the ends, and it is possible to feel between each process. The eye muscle areas are shallow with no fat cover.', 'Ribs are clearly visible.', 'Sternal fat is easily grasped and moved from side to side.'),
+(2, 'Poor', 'The spinous processes feel prominent but smooth, and individual processes can be felt only as fine corrugations. The transverse processes are smooth and rounded, and it is possible to pass the fingers under the ends with a little pressure. The eye muscle areas are of moderate depth, but have little fat cover.', 'Some ribs can be seen. There is a small amount of fat cover. Ribs are still felt.', 'Sternal fat is wider and thicker but can still be grasped and moved slightly from side to side.'),
+(3, 'Good', 'The spinous processes are detected only as small elevations; they are smooth and rounded and individual bones can be felt only with pressure. The transverse processes are smooth and well covered, and firm pressure is required to feel over the ends. The eye muscle areas are full, and have a moderate degree of fat cover.', 'Ribs are barely seen; an even layer of fat covers them. Spaces between ribs are felt using pressure.', 'Sternal fat is wide and thick. It can still be grasped but has very little movement.'),
+(4, 'Excellent', 'The spinous processes can just be detected with pressure as a hard line between the fat covered eye muscle areas. The ends of the transverse processes cannot be felt. The eye muscle areas are full, and have a thick covering of fat.', 'Ribs are not seen.', 'Sternal fat is difficult to grasp and cannot be moved from side to side.'),
+(5, 'Excellent', 'The spinous processes cannot be detected even with firm pressure, and there is a depression between the layers of fat in the position where the spinous processes would normally be felt. The transverse processes cannot be detected. The eye muscle areas are very full with thick fat cover. There may be large deposits of fat over the rump and tail.', 'Ribs are not visible and are covered with excessive fat.', 'Sternal fat extends and covers the sternum. It cannot be grasped');
+
+-- Data for: ruminant_conformation
+INSERT INTO ruminant_conformation (score, conformation, description) VALUES
+(1, 'Fair', 'Goats/sheep with defects including a short and small frame, a small heart-girth in relation to the overall body size; lordosis or kyphosis, or feet and legs that are post-legged, buck-kneed, splay-footed, or sickle-hocked.'),
+(2, 'Good', 'Goats/sheep of medium height with medium frame; shorter but straight rump, loin, and back; medium heart girth and straight legs.'),
+(3, 'Excellent', 'Goats/sheep of good height (tall), with large frame and long and straight rump, loin, and back; large heart girth and straight legs.');
+
+-- Data for: ruminant_grading_male
+INSERT INTO ruminant_grading_male (grade, age_months_sheep, age_months_goat, live_body_weight_kg_sheep, live_body_weight_kg_goat, body_condition_score, body_conformation_score) VALUES
+(1, '6-24', '6-24', '>=25', '>=20', 'Excellent', 'Excellent'),
+(2, '6-24', '6-24', '>=20', '>=15', 'Good', 'Good'),
+(3, '<6 or >24', '<6 or >24', 'No limit', 'No Limit', 'Good', 'Fair'),
+(4, '<6 or >24', '<6 or >24', 'No limit', 'No Limit', 'Poor', 'Fair');
+
+COMMIT;

@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# QGIS
+*.qgs~
+*.bak
+
+# IDE files
+.vscode/
+.idea/
